@@ -48,8 +48,9 @@ def check_input_string(input_str):
         print(f"Input Sequence is not str type")
         exit()
 
-    input_str_modify = input_str.upper().replace("U", "S") # replace U (Selenocysteine) with S (Cysteine)
-    aa_matching_list = ["W", "F", "Y", "V", "L", "I", "M", "A", "P", "C", "G", "S", "T", "N", "Q", "D", "E", "R", "K", "H"]
+    input_str_modify = input_str.upper().replace("U", "S")  # replace U (Selenocysteine) with S (Cysteine)
+    aa_matching_list = ["W", "F", "Y", "V", "L", "I", "M", "A", "P", "C",
+                        "G", "S", "T", "N", "Q", "D", "E", "R", "K", "H"]
 
     for letters in input_str_modify:
         if not (letters in aa_matching_list):
@@ -88,4 +89,3 @@ def hex_to_rgb(hex):
         rgb.append(decimal)
 
     return tuple(rgb)
-

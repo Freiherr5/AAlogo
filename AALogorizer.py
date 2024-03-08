@@ -15,7 +15,7 @@ import LogoUtil
 class AALogoGenerator:
 
     # Intilialize with AALogoGenerator()
-    def __init__(self, set_legend, list_columns):
+    def __init__(self, set_legend: bool, list_columns: list):
         self.set_legend = set_legend               # bool value for legend asset
         self.list_columns = list_columns           # shape: [AA_sequence, TMD_start, TMD_stop]
 
@@ -44,13 +44,15 @@ class AALogoGenerator:
         for index, row in df.iterrows():
             # N-term
             start_pos_tmd = int(row[self.list_columns[1]])-1
-            seq_slice_n = [row[self.list_columns[0]][start_pos_tmd-int(length_jmd):start_pos_tmd], row[self.list_columns[0]][start_pos_tmd:start_pos_tmd + int(length_tmd)]]
+            seq_slice_n = [row[self.list_columns[0]][start_pos_tmd-int(length_jmd):start_pos_tmd],
+                           row[self.list_columns[0]][start_pos_tmd:start_pos_tmd + int(length_tmd)]]
             seq_slice_n_check = [LogoUtil.check_input_string(seq) for seq in seq_slice_n]  # check sequence
             list_n.append(seq_slice_n_check)
 
             # C-term
             stop_pos_tmd = int(row[self.list_columns[2]])
-            seq_slice_c = [row[self.list_columns[0]][stop_pos_tmd-int(length_tmd):stop_pos_tmd], row[self.list_columns[0]][stop_pos_tmd:stop_pos_tmd + int(length_jmd)]]
+            seq_slice_c = [row[self.list_columns[0]][stop_pos_tmd-int(length_tmd):stop_pos_tmd],
+                           row[self.list_columns[0]][stop_pos_tmd:stop_pos_tmd + int(length_jmd)]]
             seq_slice_c_check = [LogoUtil.check_input_string(seq) for seq in seq_slice_c]
             list_c.append(seq_slice_c_check)
 
@@ -76,7 +78,8 @@ class AALogoGenerator:
         list_concat = []
         for items in list_n_or_c:
             list_concat.append(f"{items[0]}{items[1]}")
-        df_intermediate = pd.Series(list_concat).str.split(r"", expand=True).drop([0, length_jmd + length_tmd + 1], axis=1)
+        df_intermediate = pd.Series(list_concat).str.split(r"", expand=True).drop([0, length_jmd + length_tmd + 1],
+                                                                                  axis=1)
 
         aa_list_transform = [aa_list]
         for slices in df_intermediate:
@@ -88,25 +91,53 @@ class AALogoGenerator:
         aa_propensity_df = pd.DataFrame(aa_list_transform, columns=aa_list).transpose().drop(0, axis=1)
         return aa_propensity_df
 
-    def make_logo(self, df, name, length_tmd, length_jmd, aa_config_section_name, font_type="classic_AA_fonts"):    # name of the plot, length of the domains for JMD and TMD
+    def make_logo(self, df, name: str, length_tmd: int, length_jmd: int, aa_config_section_name: str = "OG_AA_config",
+                  font_type: str = "bold_AA_fonts", config_set: bool = True, color_grad: list = None,
+                  order_aa: list = None):    # name of the plot, length of the domains for JMD and TMD
         """
         Generates the final plot/logo
 
         Parameters
         __________
-        df :
-        name :
+        df : pd.DataFrame
+        name : title of generated sequence window
         length_tmd : window size of tmd (number of amino acid residues shown)
         length_jmd : window size of jmd (number of amino acid residues shown)
         aa_config_section_name : LogoStyle.ini configuration file section name with the amino acid categories
         font_type : classic_AA_fonts, bold_AA_fonts, modern_AA_fonts (writing style package)
+        config
         """
 
         path_file, sep = StandardConfig.find_folderpath()
         assets_path = f"{path_file}{sep}AA_letters_common{sep}"
 
+        # check external parameters for config / gradient
+        # _____________________________________________________________________________________________________________
         list_n, list_c = AALogoGenerator.list_slicer(self, df, length_tmd, length_jmd)
-        get_aa_list = GetAA.aa_image_colorizer(aa_config_section_name, font_type)
+        # check for get_aa_list if input is correct!
+        if not isinstance(config_set, bool):
+            raise ValueError(f"config parameter needs to be bool")
+        elif config_set is False:
+            if color_grad is not None:
+                if not isinstance(color_grad, list):
+                    raise ValueError(f"color_grad needs to have the following shape: [[r1,g1,b1],[r1,g1,b1]],"
+                                     f"where r,g,b is int or float")
+                elif np.array(color_grad).shape != (2, 3):
+                    raise ValueError(f"color_grad needs to have the following shape: [[r1,g1,b1],[r1,g1,b1]],"
+                                     f"where r,g,b is int or float")
+                test_color_grad = color_grad[0]
+                test_color_grad.extend(color_grad[1])
+                for values in test_color_grad:
+                    if not isinstance(values, (int, float)):
+                        raise ValueError(f"given list value {values} is not an allowed datatype,"
+                                         f"please enter an int or float value")
+
+            if order_aa is not None:
+                if not isinstance(order_aa, list):
+                    raise ValueError(f"order parameter needs to be list type")
+        # _____________________________________________________________________________________________________________
+
+        get_aa_list = GetAA.aa_image_colorizer(aa_config_section_name, font_type, config_set, color_grad, order_aa)
         df_n = AALogoGenerator.data_frame_aa_propensities(list_n, length_tmd, length_jmd, get_aa_list[1])
         df_c = AALogoGenerator.data_frame_aa_propensities(list_c, length_tmd, length_jmd, get_aa_list[1])
 
@@ -171,7 +202,8 @@ class AALogoGenerator:
                 else:
                     img = LogoUtil.convert_image_color(assets_path, "white_r_grad", tuple(color_gradient))
                 imagebox = OffsetImage(img, zoom=0.554)
-                r_grad = AnnotationBbox(imagebox, xy=(-0.5, 0), box_alignment=(1, 0), frameon=False)  # box_alignment position is upper middle of picture
+                # box_alignment position is upper middle of picture
+                r_grad = AnnotationBbox(imagebox, xy=(-0.5, 0), box_alignment=(1, 0), frameon=False)
                 imagebox.image.axes = ax
                 ax.add_artist(r_grad)
 
@@ -179,7 +211,7 @@ class AALogoGenerator:
                 ax.text((-length_jmd-1.6) / 2, 1.02, "JMD-N", fontsize=22, weight="bold")
                 ax.text((length_tmd-1.5) / 2, 1.02, "TMD", fontsize=22, weight="bold")
 
-            elif dfs is df_c:
+            else:
                 ax.add_patch(Rectangle((-length_jmd-0.5, 0), length_jmd, 1, color=color_tmd))  # orange
                 ax.add_patch(Rectangle((-0.5, 0), length_tmd, 1, color=color_jmd))  # blue
                 name_fig = "C_term"
@@ -190,7 +222,8 @@ class AALogoGenerator:
                 else:
                     img = LogoUtil.convert_image_color(assets_path, "white_l_grad", tuple(color_gradient))
                 imagebox = OffsetImage(img, zoom=0.554)
-                l_grad = AnnotationBbox(imagebox, xy=(-0.5, 0), box_alignment=(0, 0), frameon=False)  # box_alignment position is upper middle of picture
+                # box_alignment position is upper middle of picture
+                l_grad = AnnotationBbox(imagebox, xy=(-0.5, 0), box_alignment=(0, 0), frameon=False)
                 imagebox.image.axes = ax
                 ax.add_artist(l_grad)
 
@@ -205,6 +238,10 @@ class AALogoGenerator:
             dataframe contains amino acid frequency
             """
 
+            # if gradient is used, switch off index_color_boxes automatically
+            if get_aa_list[2] is None:
+                self.set_legend = False
+
             # add index box
             if self.set_legend:
                 list_index_color_boxes = get_aa_list[2]
@@ -216,7 +253,8 @@ class AALogoGenerator:
                     # important for converting it into an usable format for AnnotationBbox
                     imagebox = OffsetImage(index_image, zoom=0.3)
                     # AnnotationBbox for translation
-                    index_box = AnnotationBbox(imagebox, xy=(x, y), box_alignment=(-0.6, 0.35), frameon=False)  # box_alignment position is upper middle of picture
+                    # box_alignment position is upper middle of picture
+                    index_box = AnnotationBbox(imagebox, xy=(x, y), box_alignment=(-0.6, 0.35), frameon=False)
                     imagebox.image.axes = ax
                     ax.add_artist(index_box)
                     ax.text(x+0.51, y, index_text_string, fontsize=14, weight="bold")
@@ -236,13 +274,15 @@ class AALogoGenerator:
                         # Changing the height and width of the image
                         factor = aa_pos_column_list[i]  # get info from dataframe!
                         width = 110
-                        height = int(554*factor)  # conserved height
+                        height = int(554*factor)+1  # conserved height
                         # Resizing the image
                         img = img.resize((width, height))
                         # important for converting it into an usable format for AnnotationBbox
                         imagebox = OffsetImage(img, zoom=1)
                         # AnnotationBbox for translation
-                        ab = AnnotationBbox(imagebox, xy=(columns - (length_jmd+1), 1-concat_distance), box_alignment=(0.5, 0), frameon=False)  # box_alignment position is upper middle of picture
+                        # box_alignment position is upper middle of picture
+                        ab = AnnotationBbox(imagebox, xy=(columns - (length_jmd+1), 1-concat_distance),
+                                            box_alignment=(0.5, 0), frameon=False)
                         imagebox.image.axes = ax
                         ax.add_artist(ab)
                     i += 1
