@@ -6,7 +6,7 @@ import LogoUtil
 import StandardConfig
 
 
-def color_fader(position_number, c_top, c_bottom):
+def color_fader(position_number, c_top, c_bottom, color_advance=None):
     # fade (linear interpolate) from color c1 (at mix = 0) to c2 (mix = 1)
     """
     generates a color gradient between two given colors for each AA
@@ -21,13 +21,18 @@ def color_fader(position_number, c_top, c_bottom):
     _______
     gradient color, needs to be iterated!
     """
+    # color advance settings
+    if color_advance is not None:
+        value_color = color_advance[position_number]
+    else:
+        value_color = ((position_number+1)/20)
     c1 = np.array(c_top)
     c2 = np.array(c_bottom)
-    return ((1-((position_number+1)/20)) * c1 + ((position_number+1)/20) * c2).tolist()
+    return ((1-value_color) * c1 + (value_color * c2)).tolist()
 
 
 def aa_image_colorizer(aa_config_section_name, font_type="bold_AA_fonts", config_set=True, color_grad=None,
-                       order_aa=None):
+                       order_aa=None, color_advance=None):
     """
     Amino Acid (aa) .png images reorder and recolor for AALogo generation
 
@@ -42,6 +47,7 @@ def aa_image_colorizer(aa_config_section_name, font_type="bold_AA_fonts", config
     aa_compare : true order of Amino Acids post transformation (will be generated top to bottom)
     color_check_box_list : based on LogoStyle.ini, color categories of Amino Acids, can be customized freely
     """
+
 
     # get config file
     path, sep = StandardConfig.find_folderpath()  # get the current directory and the directory-nomenclature (/ or \)
@@ -105,9 +111,15 @@ def aa_image_colorizer(aa_config_section_name, font_type="bold_AA_fonts", config
 
         list_non_specified_aa = [AA for AA in aa_matching_list if AA not in aa_compare]
         aa_compare.extend(list_non_specified_aa)
+
+        # normalize color advance
+        if color_advance is not None:
+            color_advance = [(1-(float(i) - min(color_advance)) / (max(color_advance) - min(color_advance))) for i in
+                             color_advance]
         for aa in aa_compare:
             im_recolor = LogoUtil.convert_image_color(aa_font_type_path, aa, color_fader(aa_compare.index(aa),
-                                                                                         color_top, color_bottom))
+                                                                                         color_top, color_bottom,
+                                                                                         color_advance))
             list_recolor_aa.append([aa, im_recolor])
         color_check_box_list = None             # color_check_box set false since it makes no sense as gradient
 
