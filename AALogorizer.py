@@ -12,7 +12,7 @@ import ast
 import LogoUtil
 
 
-class AALogoGenerator:
+class _AALogoGenerator:
 
     # Intilialize with AALogoGenerator()
     def __init__(self, set_legend: bool, list_columns: list, start_pos: bool = True):
@@ -20,6 +20,8 @@ class AALogoGenerator:
         self.list_columns = list_columns           # shape: [aa_sequence: str, pos_seq: str]
         self.start_pos = start_pos
 
+    # Internal Processes for AAlogo generation
+    # __________________________________________________________________________________________________________________
     def list_slicer(self, df, length_right, length_left):
         """
         create 2 DataFrames:
@@ -37,29 +39,29 @@ class AALogoGenerator:
         list_n : (JMD_N sequence part, TMD sequence part)
         list_c : (TMD sequence part, JMD_C sequence part)
         """
+        if __name__ == "AALogorizer":
+            list_seq_pos = []
 
-        list_seq_pos = []
+            df = df.reset_index()  # make sure indexes pair with number of rows
 
-        df = df.reset_index()  # make sure indexes pair with number of rows
+            for index, row in df.iterrows():
+                # N-term
+                if self.start_pos:
+                    start_pos_tmd = int(row[self.list_columns[1]])-1
+                    seq_slice_n = [row[self.list_columns[0]][start_pos_tmd-int(length_left):start_pos_tmd],
+                                   row[self.list_columns[0]][start_pos_tmd:start_pos_tmd + int(length_right)]]
+                    seq_slice_n_check = [LogoUtil.check_input_string(seq) for seq in seq_slice_n]  # check sequence
+                    list_seq_pos.append(seq_slice_n_check)
 
-        for index, row in df.iterrows():
-            # N-term
-            if self.start_pos:
-                start_pos_tmd = int(row[self.list_columns[1]])-1
-                seq_slice_n = [row[self.list_columns[0]][start_pos_tmd-int(length_left):start_pos_tmd],
-                               row[self.list_columns[0]][start_pos_tmd:start_pos_tmd + int(length_right)]]
-                seq_slice_n_check = [LogoUtil.check_input_string(seq) for seq in seq_slice_n]  # check sequence
-                list_seq_pos.append(seq_slice_n_check)
+                # C-term
+                else:
+                    stop_pos_tmd = int(row[self.list_columns[1]])
+                    seq_slice_c = [row[self.list_columns[0]][stop_pos_tmd-int(length_left):stop_pos_tmd],
+                                   row[self.list_columns[0]][stop_pos_tmd:stop_pos_tmd + int(length_right)]]
+                    seq_slice_c_check = [LogoUtil.check_input_string(seq) for seq in seq_slice_c]
+                    list_seq_pos.append(seq_slice_c_check)
 
-            # C-term
-            else:
-                stop_pos_tmd = int(row[self.list_columns[1]])
-                seq_slice_c = [row[self.list_columns[0]][stop_pos_tmd-int(length_left):stop_pos_tmd],
-                               row[self.list_columns[0]][stop_pos_tmd:stop_pos_tmd + int(length_right)]]
-                seq_slice_c_check = [LogoUtil.check_input_string(seq) for seq in seq_slice_c]
-                list_seq_pos.append(seq_slice_c_check)
-
-        return list_seq_pos
+            return list_seq_pos
 
     @staticmethod
     def data_frame_aa_propensities(list_seq_pos, length_right, length_left, aa_list):
@@ -77,26 +79,28 @@ class AALogoGenerator:
         _______
         aa_propensity_df : creates dataframe with the propensity of the amino acids (from 0 to 1 normalized)
         """
+        if __name__ == "AALogorizer":
+            list_concat = []
+            for items in list_seq_pos:
+                list_concat.append(f"{items[0]}{items[1]}")
+            df_intermediate = (pd.Series(list_concat).str.split(r"", expand=True)
+                               .drop([0, length_left + length_right + 1], axis=1))
 
-        list_concat = []
-        for items in list_seq_pos:
-            list_concat.append(f"{items[0]}{items[1]}")
-        df_intermediate = pd.Series(list_concat).str.split(r"", expand=True).drop([0, length_left + length_right + 1],
-                                                                                  axis=1)
+            aa_list_transform = [aa_list]
+            for slices in df_intermediate:
+                aa_20 = []
+                list_aa_slice = df_intermediate[slices].to_numpy().tolist()
+                for AA in aa_list:
+                    aa_20.append(list_aa_slice.count(AA)/len(df_intermediate))
+                aa_list_transform.append(aa_20)
+            aa_propensity_df = pd.DataFrame(aa_list_transform, columns=aa_list).transpose().drop(0, axis=1)
+            return aa_propensity_df
+    # __________________________________________________________________________________________________________________
 
-        aa_list_transform = [aa_list]
-        for slices in df_intermediate:
-            aa_20 = []
-            list_aa_slice = df_intermediate[slices].to_numpy().tolist()
-            for AA in aa_list:
-                aa_20.append(list_aa_slice.count(AA)/len(df_intermediate))
-            aa_list_transform.append(aa_20)
-        aa_propensity_df = pd.DataFrame(aa_list_transform, columns=aa_list).transpose().drop(0, axis=1)
-        return aa_propensity_df
-
-    def make_logo(self, df, name: str, length_right: int, length_left: int, aa_config_section_name: str = "OG_AA_config",
-                  font_type: str = "bold_AA_fonts", config_set: bool = True, color_grad: list = None,
-                  order_aa_grad: list = None, color_advance: list = None, list_title_sides: list = None):
+    def make_logo(self, df, name: str, length_right: int, length_left: int,
+                  aa_config_section_name: str = "OG_AA_config", font_type: str = "bold_AA_fonts",
+                  config_set: bool = True, color_grad: list = None, order_aa_grad: list = None,
+                  color_advance: list = None, list_title_sides: list = None):
         """
         Generates the final plot/logo
 
@@ -115,52 +119,20 @@ class AALogoGenerator:
         color_advance : int or float values which are normalized and applied to the color gradient
         list_title_sides : list of the titles for both sides of the plot (separated by the start/stop position)
         """
-
         path_file, sep = StandardConfig.find_folderpath()
         assets_path = f"{path_file}{sep}AA_letters_common{sep}"
 
-        # check external parameters for config / gradient
+        list_seq_pos = _AALogoGenerator.list_slicer(self, df, length_right, length_left)
+
+        # get the necessary dataframes and image lists for AAlogo generation
         # _____________________________________________________________________________________________________________
-        list_seq_pos = AALogoGenerator.list_slicer(self, df, length_right, length_left)
-        # check for get_aa_list if input is correct!
-        if not isinstance(config_set, bool):
-            raise ValueError(f"config parameter needs to be bool")
-        elif config_set is False:
-            if color_grad is not None:
-                if not isinstance(color_grad, list):
-                    raise ValueError(f"color_grad needs to have the following shape: [[r1,g1,b1],[r1,g1,b1]],"
-                                     f"where r,g,b is int or float")
-                elif np.array(color_grad).shape != (2, 3):
-                    raise ValueError(f"color_grad needs to have the following shape: [[r1,g1,b1],[r1,g1,b1]],"
-                                     f"where r,g,b is int or float")
-                test_color_grad = color_grad[0]
-                test_color_grad.extend(color_grad[1])
-                for values in test_color_grad:
-                    if not isinstance(values, (int, float)):
-                        raise ValueError(f"given list value {values} is not an allowed datatype,"
-                                         f"please enter an int or float value")
+        get_aa_list = GetAA.aa_image_colorizer(aa_config_section_name, font_type, config_set, color_grad, order_aa_grad,
+                                               color_advance)
+        df_propensity = _AALogoGenerator.data_frame_aa_propensities(list_seq_pos, length_right, length_left,
+                                                                    get_aa_list[1])
 
-            if order_aa_grad is not None:
-                if isinstance(order_aa_grad, pd.Series):
-                    order_aa_grad = order_aa_grad.to_numpy().tolist()
-                if not isinstance(order_aa_grad, list):
-                    raise ValueError(f"order parameter needs to be list type")
-            if color_advance is not None:
-                if isinstance(color_advance, pd.Series):
-                    color_advance = color_advance.to_numpy().tolist()
-                if not isinstance(color_advance, list) and (len(color_advance) != 20):
-                    color_advance = None
-                else:
-                    for values in color_advance:
-                        if not isinstance(values, (int, float)):
-                            color_advance = None
-        # _____________________________________________________________________________________________________________
-
-        get_aa_list = GetAA.aa_image_colorizer(aa_config_section_name, font_type, config_set, color_grad, order_aa_grad
-                                               , color_advance)
-
-        df_propensity = AALogoGenerator.data_frame_aa_propensities(list_seq_pos, length_right, length_left, get_aa_list[1])
-
+        # matplotlib.pyplot based visualization
+        # ______________________________________________________________________________________________________________
         matplotlib.rcParams["axes.linewidth"] = 3
         font = {"weight": "bold",
                 "size": 18}
@@ -181,7 +153,7 @@ class AALogoGenerator:
 
         # draw areas of the domains
 
-        # color code tmd / jmd
+        # color code tmd / jmd --> original membrane focused utility of visualization
         color_tmd = "#d9bd82"
         color_jmd = "#99c0de"
         color_gradient = None
@@ -203,7 +175,8 @@ class AALogoGenerator:
         if bg_style[2] == "gradient":
             color_gradient = ast.literal_eval(config["bg_style"][bg_style[2]])  # list with rgb values
 
-        # N-term or C-term
+        # generates the background with the gradient png on top
+        # is it a start position or a stop position (important differentiation)
         if self.start_pos:
             ax.add_patch(Rectangle((-length_left-0.5, 0), length_left, 1, color=color_jmd))  # blue
             ax.add_patch(Rectangle((-0.5, 0), length_right, 1, color=color_tmd))  # orange
@@ -234,13 +207,13 @@ class AALogoGenerator:
             imagebox.image.axes = ax
             ax.add_artist(l_grad)
 
-
         """
         code part to insert letters of clustered sequences
         must be a nested loop (in a loop)
         get dataframe saved in list for each position in the sequence
         dataframe contains amino acid frequency
         """
+
         if list_title_sides is not None:
             if isinstance(list_title_sides, list) and (len(list_title_sides) == 2):
                 # text region sequences
@@ -295,8 +268,214 @@ class AALogoGenerator:
                     imagebox.image.axes = ax
                     ax.add_artist(ab)
                 i += 1
+
+        # last naming differentiation depending on start/stop position (make better)
         if self.start_pos:
             start_tag = "set_start_true"
         else:
             start_tag = "set_start_false"
         plt.savefig(f"{path_file}{sep}Output{sep}{name}_{start_tag}.png", bbox_inches='tight')
+
+
+class AAlogoUtil:
+
+    def __init__(self, df: pd.DataFrame, name: str, column_seq: str, *args_position: str):
+        self.df = df
+        self.name = name
+        self.column_seq = column_seq
+        self.args_position = args_position
+
+    def check_self(self):
+        # check df
+        if not isinstance(self.df, pd.DataFrame):
+            raise TypeError("needs to be pd.DataFrame")
+        # check if column names are in df
+        col_df_list = self.df.columns.tolist()
+        if self.column_seq not in col_df_list:
+            raise ValueError(f"{self.column_seq} not in pd.DataFrame.columns")
+        for arg_pos in self.args_position:
+            if arg_pos not in col_df_list:
+                raise ValueError(f"{arg_pos} not in pd.DataFrame.columns")
+
+    @staticmethod
+    def check_function_inputs(dict_input):
+        dict_exchange = {"start_pos": True, "aa_right": 5, "aa_left": 5, "font_type": "bold_AA_fonts",
+                         "custom_color": None, "config_name": None, "headers": None}
+
+        # simple checking of variables
+        # ______________________________________________________________________________________________________________
+        dict_typing = {"start_pos": bool, "aa_right": int, "aa_left": int, "font_type": str,
+                       "custom_color": list, "config_name": str, "headers": list}
+        dict_input_keys = dict_input.keys()
+        for keys in dict_input_keys:
+            if not isinstance(dict_input[keys], dict_typing[keys]):
+                dict_input[keys] = dict_exchange[keys]
+
+        # more complex variables check
+        # ______________________________________________________________________________________________________________
+        if "custom_colors" in dict_input_keys:
+            if dict_input["headers"] is not None:
+                if np.array(dict_input["custom_colors"]).shape != (2, 3):
+                    raise ValueError(f"custom_colors needs to have the following shape: [[r1,g1,b1],[r1,g1,b1]],"
+                                     f"where r,g,b is int or float")
+                else:
+                    for sublists in dict_input["custom_colors"]:
+                        for items in sublists:
+                            if not isinstance(items, (int, float)):
+                                ValueError(f"custom_colors needs to have the following shape: [[r1,g1,b1],[r1,g1,b1]],"
+                                           f"where r,g,b is int or float")
+
+        if "headers" in dict_input_keys:
+            if dict_input["headers"] is not None:
+                if np.array(dict_input["headers"]).shape != (1, 2):
+                    raise ValueError(f"headers must bei [left_side_title, right_side_title] in shape!")
+
+        if "config_name" in dict_input_keys:
+            config_file = "LogoStyle.ini"
+            config = ConfigParser()
+            config.read(config_file)
+            config_sections = config.sections()
+            if dict_input["config_name"] not in config_sections:
+                dict_input["config_name"] = None
+        return dict_input
+
+    @staticmethod
+    def help():
+        print("""
+        Description
+        ___________
+        AAlogo_Util is meant to ease the usage of AALogoGenerator
+        
+        Callable Functions
+        __________________
+        single_mode() : application for sequence-propensity visualization based on a single alignment position
+        tmd_mode() : application for sequence-propensity visualization based on start and stop position of a tmd 
+                     (usage for transmembrane proteins)
+        
+        Note
+        ____
+        Inputting a config setting is dominant over a gradient setting!
+        
+        Config
+        ______
+        Structure: [amino acids, RGB-color-code]
+        Example:
+        [OG_AA_config]
+        Aromatic =  ["F,Y,W", [216,116,45]]
+        Aspartic = ["V,A,L,I,M", [223,168,70]]
+        Neutral = ["S,T,N,Q", [255,255,255]]
+        Acidic = ["D,E", [224,60,60]]
+        Basic = ["H,K,R", [60,60,224]]
+        Special = ["P,G", [50,50,50]]
+        Cysteine = ["C", [224,90,224]]
+        
+        Gradient
+        ________
+        AAlogo_Util.single_mode().available_themes
+        --> see all available scale-themes
+        """)
+
+
+    def single_mode(self, start_pos: bool = True, aa_right: int = 5, aa_left: int = 5, font_type: str = "bold_AA_fonts",
+                    theme: str = "Kyte-Doolittle", custom_colors: list = None, config_name: str = None,
+                    headers: list = None):
+        # check inputs
+        # ______________________________________________________________________________________________________________
+        AAlogoUtil.check_self(self)
+        dict_inputs = {"start_pos": start_pos, "aa_right": aa_right, "aa_left": aa_left, "font_type": font_type,
+                       "custom_color": custom_colors, "config_name": config_name, "headers": headers}
+        dict_inputs = AAlogoUtil.check_function_inputs(dict_input=dict_inputs)
+
+
+        if dict_inputs["config_name"] is not None:
+            config_set = True
+        else:
+            config_set = False
+
+        # get AA order / theme for AAlogo
+        # ______________________________________________________________________________________________________________
+        data_hydrophobicity_scales = pd.read_excel("scales_hydrophobicity.xlsx")
+        if theme not in data_hydrophobicity_scales.columns.tolist():
+            theme = "Kyte-Doolittle"
+        theme_df = (data_hydrophobicity_scales[["aa_code", theme]].sort_values(by=theme, ascending=False)
+                    .reset_index().drop("index", axis=1))
+
+        order_aa_grad = theme_df["aa_code"]
+        color_advance = theme_df[theme]
+        # config is always dominant if name is given!
+        set_legend = False
+        # config is always dominant if name is given!
+        if config_set:
+            order_aa_grad, color_advance = None, None
+            set_legend = True
+        # have an attribute with all sorting options
+        # ______________________________________________________________________________________________________________
+        AAlogoUtil.single_mode.available_themes = [item for item in
+                                                   data_hydrophobicity_scales.columns.tolist()[2:]]
+
+        for arg_pos in self.args_position:
+            init_aalogo = _AALogoGenerator(set_legend=set_legend, list_columns=[self.column_seq, arg_pos],
+                                           start_pos=start_pos)
+
+            # Plot generation command
+            # make_logo(df, name, length_tmd, length_jmd, aa_config_section_name, font_type="classic_AA_fonts")
+            init_aalogo.make_logo(df=self.df, name=str(self.name), length_right=dict_inputs["aa_right"],
+                                  length_left=dict_inputs["aa_left"], font_type=dict_inputs["font_type"],
+                                  config_set=config_set, aa_config_section_name=dict_inputs["config_name"],
+                                  order_aa_grad=order_aa_grad, color_advance=color_advance, list_title_sides=headers,
+                                  color_grad=custom_colors)
+    def tmd_mode(self, start_pos: bool = True, aa_right: int = 5, aa_left: int = 5, font_type: str = "bold_AA_fonts",
+                 theme: str = "Kyte-Doolittle", custom_colors: list = None, config_name: str = None,
+                 headers: list = None):
+        # check inputs
+        # ______________________________________________________________________________________________________________
+        AAlogoUtil.check_self(self)
+        dict_inputs = {"start_pos": start_pos, "aa_right": aa_right, "aa_left": aa_left, "font_type": font_type,
+                       "custom_color": custom_colors, "config_name": config_name, "headers": headers}
+        dict_inputs = AAlogoUtil.check_function_inputs(dict_input=dict_inputs)
+
+        if dict_inputs["config_name"] is not None:
+            config_set = True
+        else:
+            config_set = False
+
+        # get AA order / theme for AAlogo
+        # ______________________________________________________________________________________________________________
+        data_hydrophobicity_scales = pd.read_excel("scales_hydrophobicity.xlsx")
+        if theme not in data_hydrophobicity_scales.columns.tolist():
+            theme = "Kyte-Doolittle"
+        theme_df = (data_hydrophobicity_scales[["aa_code", theme]].sort_values(by=theme, ascending=False)
+                    .reset_index().drop("index", axis=1))
+
+        order_aa_grad = theme_df["aa_code"]
+        color_advance = theme_df[theme]
+        set_legend = False
+        # config is always dominant if name is given!
+        if config_set:
+            order_aa_grad, color_advance = None, None
+            set_legend = True
+        # have an attribute with all sorting options
+        # ______________________________________________________________________________________________________________
+        AAlogoUtil.tmd_mode.available_themes = [item for item in
+                                                data_hydrophobicity_scales.columns.tolist()[2:]]
+
+        # algorithm with TMD mode, check only two *args allowed for start and stop position
+        # ______________________________________________________________________________________________________________
+        if len(self.args_position) > 2:
+            self.args_position = self.args_position[:2]
+            print("Warning! Given columns exceeds limit of allowed TMD positions; max = 2")
+        elif len(self.args_position) < 2:
+            raise Warning("Only 1 position given, TMD has a start and a stop position!")
+
+        for arg_pos in self.args_position:
+            init_aalogo = _AALogoGenerator(set_legend=set_legend, list_columns=[self.column_seq, arg_pos],
+                                           start_pos=start_pos)
+
+            # Plot generation command
+            # make_logo(df, name, length_tmd, length_jmd, aa_config_section_name, font_type="classic_AA_fonts")
+            init_aalogo.make_logo(df=self.df, name=str(self.name), length_right=dict_inputs["aa_right"],
+                                  length_left=dict_inputs["aa_left"], font_type=dict_inputs["font_type"],
+                                  config_set=config_set, aa_config_section_name=dict_inputs["config_name"],
+                                  order_aa_grad=order_aa_grad, color_advance=color_advance, list_title_sides=headers,
+                                  color_grad=custom_colors)
+            start_pos = False  # change orientation for stop position
