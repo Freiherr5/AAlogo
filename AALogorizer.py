@@ -327,7 +327,7 @@ class AAlogoUtil:
 
         if "headers" in dict_input_keys:
             if dict_input["headers"] is not None:
-                if np.array(dict_input["headers"]).shape != (1, 2):
+                if np.array(dict_input["headers"]).shape != (2,):
                     raise ValueError(f"headers must bei [left_side_title, right_side_title] in shape!")
 
         if "config_name" in dict_input_keys:
@@ -422,8 +422,9 @@ class AAlogoUtil:
             init_aalogo.make_logo(df=self.df, name=str(self.name), length_right=dict_inputs["aa_right"],
                                   length_left=dict_inputs["aa_left"], font_type=dict_inputs["font_type"],
                                   config_set=config_set, aa_config_section_name=dict_inputs["config_name"],
-                                  order_aa_grad=order_aa_grad, color_advance=color_advance, list_title_sides=headers,
-                                  color_grad=custom_colors)
+                                  order_aa_grad=order_aa_grad, color_advance=color_advance,
+                                  list_title_sides=dict_inputs["headers"], color_grad=custom_colors)
+
     def tmd_mode(self, start_pos: bool = True, aa_right: int = 5, aa_left: int = 5, font_type: str = "bold_AA_fonts",
                  theme: str = "Kyte-Doolittle", custom_colors: list = None, config_name: str = None,
                  headers: list = None):
@@ -476,6 +477,8 @@ class AAlogoUtil:
             init_aalogo.make_logo(df=self.df, name=str(self.name), length_right=dict_inputs["aa_right"],
                                   length_left=dict_inputs["aa_left"], font_type=dict_inputs["font_type"],
                                   config_set=config_set, aa_config_section_name=dict_inputs["config_name"],
-                                  order_aa_grad=order_aa_grad, color_advance=color_advance, list_title_sides=headers,
-                                  color_grad=custom_colors)
+                                  order_aa_grad=order_aa_grad, color_advance=color_advance,
+                                  list_title_sides=dict_inputs["headers"], color_grad=custom_colors)
             start_pos = False  # change orientation for stop position
+            if dict_inputs["headers"] is not None:
+                dict_inputs["headers"].reverse()
