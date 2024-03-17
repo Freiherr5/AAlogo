@@ -1,11 +1,11 @@
 import os
+import platform
 import pathlib
 
 
 def find_folderpath():
     """
     Identification of Operating System (OS) and current directory of files
-
     Returns
     _______
     path : current directory path the .py file is located on the OS
@@ -13,13 +13,12 @@ def find_folderpath():
     """
 
     path = str(pathlib.Path().absolute())
-    # generate directory annotation
-    if bool(path.find("C:") == 0):  # Windows path
-        notation = "\\"
+    # generate OS seperater (sep)
+    if platform.system() == 'Windows':
+        sep = "\\"
     else:
-        notation = "/"  # Linux path
-
-    return path, notation
+        sep = "/"
+    return path, sep
 
 
 def make_directory(name_dir, path_dir=None):
