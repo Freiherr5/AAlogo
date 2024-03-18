@@ -49,7 +49,8 @@ def check_input_string(input_str):
         exit()
 
     input_str_modify = input_str.upper().replace("U", "S")  # replace U (Selenocysteine) with S (Cysteine)
-    aa_matching_list = ["W", "F", "Y", "V", "L", "I", "M", "A", "P", "C",
+    aa_matching_list = ["-",  # "-" is an empty space --> replaced with None
+                        "W", "F", "Y", "V", "L", "I", "M", "A", "P", "C",
                         "G", "S", "T", "N", "Q", "D", "E", "R", "K", "H"]
 
     for letters in input_str_modify:

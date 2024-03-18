@@ -7,7 +7,6 @@ from datetime import datetime
 
 # benchmarking
 # ______________________________________________________________________________________________________________________
-# create a decorater function just because
 def timingmethod(func):
     def time_wrapper(*args, **kwargs):
         start_now = datetime.now()
@@ -23,6 +22,8 @@ def timingmethod(func):
     return time_wrapper
 
 
+# utility for pathing
+# ______________________________________________________________________________________________________________________
 def find_folderpath():
     """
     Identification of Operating System (OS) and current directory of files

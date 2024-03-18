@@ -48,8 +48,15 @@ class _AALogoGenerator:
             # N-term
             if self.start_pos:
                 start_pos_tmd = int(row[self.list_columns[1]])-1
-                seq_slice_n = [row[self.list_columns[0]][start_pos_tmd-int(length_left):start_pos_tmd],
-                               row[self.list_columns[0]][start_pos_tmd:start_pos_tmd + int(length_right)]]
+                if start_pos_tmd-int(length_left) >= 0:
+                    seq_slice_n = [row[self.list_columns[0]][start_pos_tmd - int(length_left):start_pos_tmd],
+                                   row[self.list_columns[0]][start_pos_tmd:start_pos_tmd + int(length_right)]]
+                else:
+                    seq_slice_n_start_pre = row[self.list_columns[0]][0:start_pos_tmd]
+                    overhang_start = "-"*(int(length_left)-start_pos_tmd)  # "-" take in account shorter seq
+                    seq_slice_n_start = f"{overhang_start}{seq_slice_n_start_pre}"
+                    seq_slice_n = [seq_slice_n_start,
+                                   row[self.list_columns[0]][start_pos_tmd:start_pos_tmd + int(length_right)]]
                 seq_slice_n_check = [LogoUtil.check_input_string(seq) for seq in seq_slice_n]  # check sequence
                 list_seq_pos.append(seq_slice_n_check)
 
@@ -85,13 +92,15 @@ class _AALogoGenerator:
             list_concat.append(f"{items[0]}{items[1]}")
         df_intermediate = (pd.Series(list_concat).str.split(r"", expand=True)
                            .drop([0, length_left + length_right + 1], axis=1))
+        df_intermediate.replace("-", None, inplace=True)
 
         aa_list_transform = [aa_list]
         for slices in df_intermediate:
             aa_20 = []
             list_aa_slice = df_intermediate[slices].to_numpy().tolist()
+            len_slice = len(list_aa_slice)
             for AA in aa_list:
-                aa_20.append(list_aa_slice.count(AA)/len(df_intermediate))
+                aa_20.append(list_aa_slice.count(AA)/len_slice)  # before df_intermediate
             aa_list_transform.append(aa_20)
         aa_propensity_df = pd.DataFrame(aa_list_transform, columns=aa_list).transpose().drop(0, axis=1)
         return aa_propensity_df
@@ -314,6 +323,11 @@ class AAlogoMaker:
 
         # more complex variables check
         # ______________________________________________________________________________________________________________
+        for aa_lengths in ["aa_right", "aa_left"]:
+            if dict_input[aa_lengths] > 40:
+                print(f"{dict_input[aa_lengths]} exceeds the length limit for each side (max = 40 amino acids)")
+                dict_input[aa_lengths] = 40
+
         if "custom_colors" in dict_input_keys:
             if dict_input["headers"] is not None:
                 if np.array(dict_input["custom_colors"]).shape != (2, 3):
@@ -343,7 +357,7 @@ class AAlogoMaker:
     @staticmethod
     def help():
         print("""
-        Description
+        Descriptionstart_pos_tmd - int(length_left)
         ___________
         AAlogoMaker is meant to ease the usage of AALogoGenerator
                         ________________________________________________________________________________________________
