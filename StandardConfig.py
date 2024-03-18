@@ -1,6 +1,26 @@
 import os
 import platform
 import pathlib
+import time
+from datetime import datetime
+
+
+# benchmarking
+# ______________________________________________________________________________________________________________________
+# create a decorater function just because
+def timingmethod(func):
+    def time_wrapper(*args, **kwargs):
+        start_now = datetime.now()
+        current_time = start_now.strftime("%H:%M:%S")
+        t0 = time.perf_counter()
+        print("Begin process: ", current_time)
+        func(*args, **kwargs)            # actual function called here
+        end_now = datetime.now()
+        current_time = end_now.strftime("%H:%M:%S")
+        t1 = time.perf_counter()              # more accurate than time.time() --> is for telling you what time it is
+        print("End process: ", current_time)
+        print(f"Process time: {round(t1-t0, 3)} sec.")
+    return time_wrapper
 
 
 def find_folderpath():
