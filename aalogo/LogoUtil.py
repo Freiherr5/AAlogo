@@ -2,7 +2,7 @@
 import numpy as np
 from PIL import Image
 # intern
-import StandardConfig
+from aalogo import StandardConfig
 
 
 def convert_image_color(folder_path, image_name, tuple_rgb):

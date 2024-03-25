@@ -61,7 +61,7 @@ def make_directory(name_dir, path_dir=None):
     # check and create new target directory if input given
     path_name_dir = f"{path_dir}{sep}{name_dir}"
     if os.path.exists(path_name_dir):
-        print("Path already exists, skip folder creation...")
+        pass
     else:
         os.mkdir(path_name_dir)
         print("Path " + str(path_name_dir) + " is created...")  # read files from target folder "input"

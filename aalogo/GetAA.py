@@ -1,11 +1,12 @@
 # standard libs
+import os
 import ast
 from configparser import ConfigParser
 import numpy as np
 from PIL import Image
 # intern
-import LogoUtil
-import StandardConfig
+from aalogo import LogoUtil
+from aalogo import StandardConfig
 
 
 def color_fader(position_number, c_top, c_bottom, color_advance=None):
@@ -52,7 +53,8 @@ def aa_image_colorizer(aa_config_section_name, font_type="bold_AA_fonts", config
 
 
     # get config file
-    path_file, sep = StandardConfig.find_folderpath()
+    sep = StandardConfig.find_folderpath()[1]
+    path_file = os.path.abspath(os.path.dirname(__file__))
 
     config_file = "LogoStyle.ini"
     config = ConfigParser()

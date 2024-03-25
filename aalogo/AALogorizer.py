@@ -1,4 +1,5 @@
 # standard libs
+import os
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -9,10 +10,11 @@ import numpy as np
 from configparser import ConfigParser
 import ast
 # intern
-import GetAA
-import StandardConfig
-from StandardConfig import timingmethod
-import LogoUtil
+
+from aalogo import GetAA
+from aalogo import StandardConfig
+from aalogo.StandardConfig import timingmethod
+from aalogo import LogoUtil
 
 
 class _AALogoGenerator:
@@ -131,7 +133,9 @@ class _AALogoGenerator:
         list_title_sides : list of the titles for both sides of the plot (separated by the start/stop position)
         """
 
-        path_file, sep = StandardConfig.find_folderpath()
+        path_current, sep = StandardConfig.find_folderpath()
+        path_file = os.path.abspath(os.path.dirname(__file__))
+
         assets_path = f"{path_file.split("aalogo")[0]}fonts{sep}AA_letters_common{sep}"
 
         list_seq_pos = _AALogoGenerator._list_slicer(self, df, length_right, length_left)
@@ -170,7 +174,8 @@ class _AALogoGenerator:
         color_jmd = "#99c0de"
         color_gradient = None
 
-        config_file = "LogoStyle.ini"
+
+        config_file = f"{path_file}{sep}LogoStyle.ini"
         config = ConfigParser()
         config.read(config_file)
         config.sections()
@@ -286,7 +291,8 @@ class _AALogoGenerator:
             start_tag = "set_start_true"
         else:
             start_tag = "set_start_false"
-        plt.savefig(f"{path_file}{sep}Output{sep}{name}_{start_tag}.png", bbox_inches='tight')
+        StandardConfig.make_directory(f"output")
+        plt.savefig(f"{path_current}{sep}output{sep}{name}_{start_tag}.png", bbox_inches='tight')
 
 
 class AAlogoMaker:
@@ -431,7 +437,9 @@ class AAlogoMaker:
 
         # get AA order / theme for AAlogo
         # ______________________________________________________________________________________________________________
-        data_hydrophobicity_scales = pd.read_excel("scales_hydrophobicity.xlsx")
+        sep = StandardConfig.find_folderpath()[1]
+        path_file = os.path.abspath(os.path.dirname(__file__))
+        data_hydrophobicity_scales = pd.read_excel(f"{path_file.split("aalogo")[0]}grad_scales{sep}scales_hydrophobicity.xlsx")
         if theme not in data_hydrophobicity_scales.columns.tolist():
             theme = "Kyte-Doolittle"
         theme_df = (data_hydrophobicity_scales[["aa_code", theme]].sort_values(by=theme, ascending=False)
@@ -456,11 +464,11 @@ class AAlogoMaker:
 
             # Plot generation command
             # make_logo(df, name, length_tmd, length_jmd, aa_config_section_name, font_type="classic_AA_fonts")
-            init_aalogo.make_logo(df=self.df, name=str(self.name), length_right=dict_inputs["aa_right"],
-                                  length_left=dict_inputs["aa_left"], font_type=dict_inputs["font_type"],
-                                  config_set=config_set, aa_config_section_name=dict_inputs["config_name"],
-                                  order_aa_grad=order_aa_grad, color_advance=color_advance,
-                                  list_title_sides=dict_inputs["headers"], color_grad=custom_colors)
+            init_aalogo._make_logo(df=self.df, name=str(self.name), length_right=dict_inputs["aa_right"],
+                                   length_left=dict_inputs["aa_left"], font_type=dict_inputs["font_type"],
+                                   config_set=config_set, aa_config_section_name=dict_inputs["config_name"],
+                                   order_aa_grad=order_aa_grad, color_advance=color_advance,
+                                   list_title_sides=dict_inputs["headers"], color_grad=custom_colors)
 
     @timingmethod
     def tmd_mode(self, start_pos: bool = True, aa_jmd: int = 5, aa_tmd: int = 5, font_type: str = "bold_AA_fonts",
@@ -480,7 +488,9 @@ class AAlogoMaker:
 
         # get AA order / theme for AAlogo
         # ______________________________________________________________________________________________________________
-        data_hydrophobicity_scales = pd.read_excel("scales_hydrophobicity.xlsx")
+        sep = StandardConfig.find_folderpath()[1]
+        path_file = os.path.abspath(os.path.dirname(__file__))
+        data_hydrophobicity_scales = pd.read_excel(f"{path_file.split("aalogo")[0]}grad_scales{sep}scales_hydrophobicity.xlsx")
         if theme not in data_hydrophobicity_scales.columns.tolist():
             theme = "Kyte-Doolittle"
         theme_df = (data_hydrophobicity_scales[["aa_code", theme]].sort_values(by=theme, ascending=False)
@@ -512,11 +522,11 @@ class AAlogoMaker:
 
             # Plot generation command
             # make_logo(df, name, length_tmd, length_jmd, aa_config_section_name, font_type="classic_AA_fonts")
-            init_aalogo.make_logo(df=self.df, name=str(self.name), length_right=dict_inputs["aa_right"],
-                                  length_left=dict_inputs["aa_left"], font_type=dict_inputs["font_type"],
-                                  config_set=config_set, aa_config_section_name=dict_inputs["config_name"],
-                                  order_aa_grad=order_aa_grad, color_advance=color_advance,
-                                  list_title_sides=dict_inputs["headers"], color_grad=custom_colors)
+            init_aalogo._make_logo(df=self.df, name=str(self.name), length_right=dict_inputs["aa_right"],
+                                   length_left=dict_inputs["aa_left"], font_type=dict_inputs["font_type"],
+                                   config_set=config_set, aa_config_section_name=dict_inputs["config_name"],
+                                   order_aa_grad=order_aa_grad, color_advance=color_advance,
+                                   list_title_sides=dict_inputs["headers"], color_grad=custom_colors)
             start_pos = False  # change orientation for stop position
             if dict_inputs["headers"] is not None:
                 dict_inputs["headers"].reverse()
