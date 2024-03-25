@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aalogo"
+authors = [
+    {name = "Freiherr"},
+]
+description = "Visualization of amino acid propensities in a given sequence collection"
+keywords = ["amino acids", "weblogo", "aalogo", "aa"]
+version = "0.0.1"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.12"
+license = {file = "LICENSE.txt"}
+classifiers = [
+    "Framework :: matplotlib",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+   "matplotlib>=3.8.3",
+   "numpy>=1.26.4",
+   "pandas>=2.2.1",
+   "Pillow>=10.2.0"
+]
+
+[tool.setuptools]
+py-modules = ["aalogo", "example", "fonts", "grad_scales"]

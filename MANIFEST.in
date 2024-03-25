@@ -1,0 +1,6 @@
+include fonts/bold_AA_fonts/*.png
+include fonts/classic_AA_fonts/*.png
+include fonts/modern_AA_fonts/*.png
+include fonts/AA_letters_common/*.png
+include grad_scales/*.xlsx
+include aalogo/*.LogoStyle.ini
