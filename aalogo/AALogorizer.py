@@ -49,8 +49,11 @@ class _AALogoGenerator:
         df = df.reset_index()  # make sure indexes pair with number of rows
 
         for index, row in df.iterrows():
+            if int(row[self.list_columns[1]]) <= 0:
+                print(f"Removed: start position of {row} is less than 1!")
+
             # N-term
-            if self.start_pos:
+            elif self.start_pos:
                 start_pos_tmd = int(row[self.list_columns[1]])-1
                 if start_pos_tmd-int(length_left) >= 0:
                     seq_slice_n = [row[self.list_columns[0]][start_pos_tmd - int(length_left):start_pos_tmd],
@@ -139,7 +142,6 @@ class _AALogoGenerator:
         assets_path = f"{path_file.split("aalogo")[0]}fonts{sep}AA_letters_common{sep}"
 
         list_seq_pos = _AALogoGenerator._list_slicer(self, df, length_right, length_left)
-
         # get the necessary dataframes and image lists for AAlogo generation
         # ______________________________________________________________________________________________________________
         get_aa_list = GetAA.aa_image_colorizer(aa_config_section_name, font_type, config_set, color_grad,
@@ -292,7 +294,7 @@ class _AALogoGenerator:
         else:
             start_tag = "set_start_false"
         StandardConfig.make_directory(f"output")
-        plt.savefig(f"{path_current}{sep}output{sep}{name}_{start_tag}.png", bbox_inches='tight')
+        plt.savefig(f"{path_current}{sep}output{sep}{name}_{start_tag}.png", bbox_inches='tight', dpi=400)
 
 
 class AAlogoMaker:
@@ -317,6 +319,9 @@ class AAlogoMaker:
 
     @staticmethod
     def _check_function_inputs(dict_input):
+        path_current, sep = StandardConfig.find_folderpath()
+        path_file = os.path.abspath(os.path.dirname(__file__))
+
         dict_exchange = {"start_pos": True, "aa_right": 5, "aa_left": 5, "font_type": "bold_AA_fonts",
                          "custom_color": None, "config_name": None, "headers": None}
 
@@ -357,7 +362,7 @@ class AAlogoMaker:
                     raise ValueError(f"headers must bei [left_side_title, right_side_title] in shape!")
 
         if "config_name" in dict_input_keys:
-            config_file = "LogoStyle.ini"
+            config_file = f"{path_file}{sep}LogoStyle.ini"
             config = ConfigParser()
             config.read(config_file)
             config_sections = config.sections()

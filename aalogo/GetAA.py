@@ -56,7 +56,7 @@ def aa_image_colorizer(aa_config_section_name, font_type="bold_AA_fonts", config
     sep = StandardConfig.find_folderpath()[1]
     path_file = os.path.abspath(os.path.dirname(__file__))
 
-    config_file = "LogoStyle.ini"
+    config_file = f"{path_file}{sep}LogoStyle.ini"
     config = ConfigParser()
     config.read(config_file)
     config.sections()
