@@ -77,7 +77,9 @@ def aa_image_colorizer(aa_config_section_name, font_type="bold_AA_fonts", config
     aa_font_type_path = f"{path_fonts}{sep}{font_type}"
     aa_index_box_path = f"{path_fonts}{sep}AA_letters_common"
 
-    if config_set:  # if config is set to true
+    # if config is set to True
+    # __________________________________________________________________________________________________________________
+    if config_set:
 
         # get all Amino Acid (AA) categories (define color categories of the AA-images)
         aa_category = list(config[aa_config_section_name])
@@ -92,8 +94,18 @@ def aa_image_colorizer(aa_config_section_name, font_type="bold_AA_fonts", config
 
             aa_compare.extend(aa_list)
             r, g, b = entry_category[1]  # assign new RGB values form .ini file entry
+
+            # check rgb values
+            list_rgb = []
+            for value in [r, g, b]:
+                if value < 0:
+                    value = 0
+                elif value > 255:
+                    value = 255
+                list_rgb.append(value)
+
             for aa in aa_list:
-                im_recolor = LogoUtil.convert_image_color(aa_font_type_path, aa, (r, g, b))
+                im_recolor = LogoUtil.convert_image_color(aa_font_type_path, aa, tuple(list_rgb))
                 list_recolor_aa.append([aa, im_recolor])
 
             # color boxes for index_box
@@ -106,6 +118,8 @@ def aa_image_colorizer(aa_config_section_name, font_type="bold_AA_fonts", config
             im = Image.open(f"{aa_font_type_path}{sep}{aa}.png")
             list_recolor_aa.append([aa, im])
 
+    # if config is set to False (gradient mode)
+    # __________________________________________________________________________________________________________________
     else:
         if color_grad is not None:
             color_top = color_grad[0]

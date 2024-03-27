@@ -10,7 +10,6 @@ import numpy as np
 from configparser import ConfigParser
 import ast
 # intern
-
 from aalogo import GetAA
 from aalogo import StandardConfig
 from aalogo.StandardConfig import timingmethod
@@ -50,7 +49,9 @@ class _AALogoGenerator:
 
         for index, row in df.iterrows():
             if int(row[self.list_columns[1]]) <= 0:
-                print(f"Removed: start position of {row} is less than 1!")
+                print(f"Removed: start position of \n"
+                      f"{row} \n"
+                      f"is less than 1!")
 
             # N-term
             elif self.start_pos:
@@ -444,7 +445,8 @@ class AAlogoMaker:
         # ______________________________________________________________________________________________________________
         sep = StandardConfig.find_folderpath()[1]
         path_file = os.path.abspath(os.path.dirname(__file__))
-        data_hydrophobicity_scales = pd.read_excel(f"{path_file.split("aalogo")[0]}grad_scales{sep}scales_hydrophobicity.xlsx")
+        data_hydrophobicity_scales = pd.read_excel(f"{path_file.split("aalogo")[0]}grad_scales{sep}"
+                                                   f"scales_hydrophobicity.xlsx")
         if theme not in data_hydrophobicity_scales.columns.tolist():
             theme = "Kyte-Doolittle"
         theme_df = (data_hydrophobicity_scales[["aa_code", theme]].sort_values(by=theme, ascending=False)
@@ -495,7 +497,8 @@ class AAlogoMaker:
         # ______________________________________________________________________________________________________________
         sep = StandardConfig.find_folderpath()[1]
         path_file = os.path.abspath(os.path.dirname(__file__))
-        data_hydrophobicity_scales = pd.read_excel(f"{path_file.split("aalogo")[0]}grad_scales{sep}scales_hydrophobicity.xlsx")
+        data_hydrophobicity_scales = pd.read_excel(f"{path_file.split("aalogo")[0]}grad_scales{sep}"
+                                                   f"scales_hydrophobicity.xlsx")
         if theme not in data_hydrophobicity_scales.columns.tolist():
             theme = "Kyte-Doolittle"
         theme_df = (data_hydrophobicity_scales[["aa_code", theme]].sort_values(by=theme, ascending=False)

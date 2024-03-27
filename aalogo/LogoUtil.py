@@ -5,6 +5,8 @@ from PIL import Image
 from aalogo import StandardConfig
 
 
+# recolor .png via numpy
+# ______________________________________________________________________________________________________________________
 def convert_image_color(folder_path, image_name, tuple_rgb):
     """
     Transforms white pixels into colored pixels based on a rgb-tuple
@@ -34,6 +36,8 @@ def convert_image_color(folder_path, image_name, tuple_rgb):
     return im_recolor
 
 
+# check if contains allowed letters
+# ______________________________________________________________________________________________________________________
 def check_input_string(input_str):
     """
     Checks if input string has allowed characters
@@ -63,6 +67,8 @@ def check_input_string(input_str):
     return input_str_modify
 
 
+# color conversion tool
+# ______________________________________________________________________________________________________________________
 def rgb_to_hex(r, g, b):
     """
     Parameters

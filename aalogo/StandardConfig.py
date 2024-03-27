@@ -14,13 +14,13 @@ def timingmethod(func):
         start_now = datetime.now()
         current_time = start_now.strftime("%H:%M:%S")
         t0 = time.perf_counter()
-        print("Begin process: ", current_time)
+        print(f"Begin process {func.__name__}: ", current_time)
         called_func = func(*args, **kwargs)            # actual function called here
         end_now = datetime.now()
         current_time = end_now.strftime("%H:%M:%S")
         t1 = time.perf_counter()              # more accurate than time.time() --> is for telling you what time it is
-        print("End process: ", current_time)
-        print(f"Process time: {t1-t0}")
+        print(f"End process {func.__name__}: ", current_time)
+        print(f"Process time: {round(t1-t0, 2)} seconds")
         return called_func
     return time_wrapper
 
