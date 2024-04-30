@@ -4,8 +4,8 @@
 
 ### Description
 
-Amino Acid sequence visualization program (inspired by WebLogo).
-Allows the user a wide range of visual customization
+Amino Acid sequence visualization program (inspired by WebLogo) which
+allows the user a wide range of visual customization.
 
 ---
 
